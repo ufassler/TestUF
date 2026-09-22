@@ -23,7 +23,7 @@ var
 begin
   FixedSQL := SQLText;
 
-  // Regex: TriggerblÃ¶cke mit IF UPDATE(...) OR UPDATE(...)
+  // Regex: Triggerblöcke mit IF UPDATE(...) OR UPDATE(...)
   RegTrigger := TRegEx.Create(
     'IF\s*\(\s*UPDATE\s*\(\s*[A-Z0-9_]+\s*\)\s*(?:OR\s+UPDATE\s*\(\s*[A-Z0-9_]+\s*\))*\s*\)\s*BEGIN(.*?)^\s*END\b',
     [roSingleLine, roIgnoreCase, roMultiLine]);
@@ -32,11 +32,11 @@ begin
   begin
     TriggerText := Match.Value;
 
-    // PrÃ¼fen, ob Variablenverwendung vorliegt
+    // Prüfen, ob Variablenverwendung vorliegt
     if not (TriggerText.Contains('FROM inserted') and TriggerText.Contains('@')) then
       Continue;
 
-    // PrÃ¼fen, ob Restrict vorliegt
+    // Prüfen, ob Restrict vorliegt
     if TriggerText.Contains('FROM inserted') and TriggerText.Contains('@NullRows') then
       Continue;
 
@@ -100,14 +100,14 @@ begin
     if Length(SetFields) = 0 then
       Continue;
 
-    // SET-Teil dynamisch fÃ¼r alle Variablen
+    // SET-Teil dynamisch für alle Variablen
     FieldListSet := '';
     for i := 0 to High(SetFields) do
     begin
       FieldListSet := InsertDelimiter(FieldListSet, Format('ch.%s = i.%s', [SetFields[i], Copy(Vars[i], 2, MaxInt)]), ', ');
     end;
 
-    // JOIN-Teil dynamisch fÃ¼r alle Variablen
+    // JOIN-Teil dynamisch für alle Variablen
     FieldListJoin := '';
     for i := 0 to High(Vars) do
     begin
@@ -127,11 +127,11 @@ begin
     end;
     UpdateClause := UpdateClause + ')';
 
-    // Null-sicherer "Wert hat sich geÃ¤ndert" WHERE-Block fÃ¼r alle Vars-Felder
+    // Null-sicherer "Wert hat sich geändert" WHERE-Block für alle Vars-Felder
     var ChangeWhere := '';
     for i := 0 to High(Vars) do
     begin
-      var FieldName := Copy(Vars[i], 2, MaxInt);  // Spaltenname ohne fÃ¼hrendes Zeichen
+      var FieldName := Copy(Vars[i], 2, MaxInt);  // Spaltenname ohne führendes Zeichen
       if i > 0 then
         ChangeWhere := ChangeWhere + ' OR ';
 
@@ -147,7 +147,7 @@ begin
         UpdateClause + sLineBreak +
         '    BEGIN' + sLineBreak +
 
-            // Check, ob Feld wirklich verÃ¤ndert
+            // Check, ob Feld wirklich verändert
         '      IF EXISTS (' + sLineBreak +
         '        SELECT 1' + sLineBreak +
         '        FROM inserted i' + sLineBreak +
@@ -171,8 +171,8 @@ begin
         '      END' + sLineBreak +
         '    END';
     end else begin
-      // Bei FK aus nur 1 Feld (kein OR in UpdateClause) i per Primary Key mit d verknÃ¼pfen;
-      // bei FK aus 2 Feldern (OR in UpdateClause) reicht CROSS JOIN, da bereits auf genau 1 Satz geprÃ¼ft wird.
+      // Bei FK aus nur 1 Feld (kein OR in UpdateClause) i per Primary Key mit d verknüpfen;
+      // bei FK aus 2 Feldern (OR in UpdateClause) reicht CROSS JOIN, da bereits auf genau 1 Satz geprüft wird.
       var JoinInsertedClause: string;
       if Length(Vars) <= 1 then
         JoinInsertedClause :=
