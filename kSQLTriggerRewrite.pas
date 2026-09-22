@@ -171,15 +171,19 @@ begin
         '      END' + sLineBreak +
         '    END';
     end else begin
-      // Bei FK aus nur 1 Feld (kein OR in UpdateClause) i per Primary Key mit d verknüpfen;
-      // bei FK aus 2 Feldern (OR in UpdateClause) reicht CROSS JOIN, da bereits auf genau 1 Satz geprüft wird.
+      // Bei FK aus nur 1 Feld (kein OR in UpdateClause) i per Primary Key mit d verknüpfen, THROW ohne Tabellenname;
+      // bei FK aus 2 Feldern (OR in UpdateClause) reicht CROSS JOIN, da bereits auf genau 1 Satz geprüft wird, THROW mit Tabellenname.
       var JoinInsertedClause: string;
-      if Length(Vars) <= 1 then
+      var ThrowDetail: string;
+      if Length(Vars) <= 1 then begin
         JoinInsertedClause :=
           '  INNER JOIN inserted i' + sLineBreak +
-          Format('    ON %s%s', [PrimaryKey, sLineBreak])
-      else
+          Format('    ON %s%s', [PrimaryKey, sLineBreak]);
+        ThrowDetail := Trim(ReplaceStr(PrimaryKey, sLineBreak, ''));
+      end else begin
         JoinInsertedClause := '  CROSS JOIN inserted i' + sLineBreak;
+        ThrowDetail := TableName + ', ' + Trim(ReplaceStr(PrimaryKey, sLineBreak, ''));
+      end;
 
       FixedBlock :=
         UpdateClause + sLineBreak +
@@ -187,7 +191,7 @@ begin
 
         '  IF (SELECT COUNT(*) FROM inserted) <> 1 OR (SELECT COUNT(*) FROM deleted) <> 1' + sLineBreak +
         '  BEGIN' + sLineBreak +
-        '      THROW 50001, ''Es darf nur 1 Satz pro Statement upgedatet werden: ' + TableName + ', ' + Trim(ReplaceStr(PrimaryKey, sLineBreak, '')) + ''', 1;' + sLineBreak +
+        '      THROW 50001, ''Es darf nur 1 Satz pro Statement upgedatet werden: ' + ThrowDetail + ''', 1;' + sLineBreak +
         '  END;' + sLineBreak +
 
         '  UPDATE ch' + sLineBreak +
